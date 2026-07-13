@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+"""Local Markdown tracker helper for Product Engineering OS."""
+
+from __future__ import annotations
+import argparse
+import datetime as dt
+import re
+from pathlib import Path
+
+STATES = ["draft", "needs-discovery", "ready", "in-progress", "in-review", "acceptance", "done", "blocked"]
+TRANSITIONS = {
+    "draft": {"needs-discovery", "ready", "blocked"},
+    "needs-discovery": {"draft", "ready", "blocked"},
+    "ready": {"in-progress", "blocked", "needs-discovery"},
+    "in-progress": {"in-review", "ready", "blocked"},
+    "in-review": {"acceptance", "in-progress", "blocked"},
+    "acceptance": {"done", "in-progress", "blocked"},
+    "blocked": {"draft", "needs-discovery", "ready", "in-progress"},
+    "done": set(),
+}
+REQUIRED_HEADINGS = [
+    "## User outcome", "## Business value", "## Scope", "## Non-goals",
+    "## Acceptance criteria", "## Primary testing seam", "## Dependencies",
+    "## Definition of done",
+]
+
+def parse_scalar(raw):
+    raw = raw.strip()
+    if raw in {"", "[]"}:
+        return []
+    if raw.startswith("[") and raw.endswith("]"):
+        inner = raw[1:-1].strip()
+        return [] if not inner else [x.strip().strip("'\"") for x in inner.split(",")]
+    return raw.strip("'\"")
+
+def parse_frontmatter(text):
+    if not text.startswith("---\n"):
+        return {}
+    end = text.find("\n---\n", 4)
+    if end < 0:
+        return {}
+    data = {}
+    for line in text[4:end].splitlines():
+        if not line.strip() or line.lstrip().startswith("#") or ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        data[key.strip()] = parse_scalar(value)
+    return data
+
+def scalar(value):
+    return "[" + ", ".join(value) + "]" if isinstance(value, list) else str(value)
+
+def replace_frontmatter(text, data):
+    block = "---\n" + "\n".join(f"{k}: {scalar(v)}" for k, v in data.items()) + "\n---\n"
+    if not text.startswith("---\n"):
+        return block + "\n" + text
+    end = text.find("\n---\n", 4)
+    if end < 0:
+        raise ValueError("Malformed frontmatter")
+    return block + text[end + 5:]
+
+def find_root(start=None):
+    current = (start or Path.cwd()).resolve()
+    for candidate in [current, *current.parents]:
+        if (candidate / ".product-os" / "config.yml").exists() or (candidate / ".git").exists():
+            return candidate
+    return current
+
+def stories(root):
+    return sorted(root.glob("docs/product/**/stories/STORY-*.md"))
+
+def load(path):
+    text = path.read_text()
+    return parse_frontmatter(text), text
+
+def resolve_story(root, value):
+    candidate = Path(value)
+    if candidate.exists():
+        return candidate.resolve()
+    matches = []
+    for path in stories(root):
+        data, _ = load(path)
+        if data.get("id") == value or path.name.startswith(value):
+            matches.append(path)
+    if len(matches) == 1:
+        return matches[0]
+    if not matches:
+        raise ValueError(f"Story not found: {value}")
+    raise ValueError(f"Story is ambiguous: {value}")
+
+def validate_story(path):
+    errors = []
+    data, text = load(path)
+    for key in ("id", "title", "state", "feature", "depends_on", "created", "updated"):
+        if key not in data:
+            errors.append(f"missing field: {key}")
+    if data.get("state") not in STATES:
+        errors.append(f"invalid state: {data.get('state')}")
+    for heading in REQUIRED_HEADINGS:
+        if heading not in text:
+            errors.append(f"missing heading: {heading}")
+    ac = re.search(r"## Acceptance criteria\s*(.*?)(?=\n## |\Z)", text, re.S)
+    if not ac or "- [ ]" not in ac.group(1):
+        errors.append("acceptance criteria need checklist items")
+    seam = re.search(r"## Primary testing seam\s*(.*?)(?=\n## |\Z)", text, re.S)
+    if not seam or len(seam.group(1).strip()) < 12:
+        errors.append("primary testing seam is missing or vague")
+    return errors
+
+def doctor(root):
+    required = [
+        root / "AGENTS.md", root / "CLAUDE.md", root / ".product-os/config.yml",
+        root / "docs/agents/workflow.md", root / "docs/product",
+        root / "docs/personas", root / "docs/adr",
+    ]
+    return [str(p.relative_to(root)) for p in required if not p.exists()]
+
+def set_state(path, target, force=False):
+    data, text = load(path)
+    current = data.get("state")
+    if target not in STATES:
+        raise ValueError(f"Unknown state: {target}")
+    if current != target and not force and target not in TRANSITIONS.get(current, set()):
+        raise ValueError(f"Invalid transition: {current} -> {target}")
+    if target == "ready":
+        errors = validate_story(path)
+        if errors:
+            raise ValueError("Cannot move invalid story to ready: " + "; ".join(errors))
+    data["state"] = target
+    data["updated"] = dt.date.today().isoformat()
+    path.write_text(replace_frontmatter(text, data))
+    return current, target
+
+def dependency_done(root, dep):
+    for path in stories(root):
+        data, _ = load(path)
+        if data.get("id") == dep:
+            return data.get("state") == "done"
+    return False
+
+def next_story(root):
+    candidates = []
+    for path in stories(root):
+        data, _ = load(path)
+        if data.get("state") == "ready" and all(dependency_done(root, d) for d in data.get("depends_on", [])):
+            candidates.append((data.get("id", ""), path, data))
+    if not candidates:
+        return None
+    return sorted(candidates, key=lambda x: x[0])[0]
+
+def refresh_index(root, feature):
+    feature = Path(feature)
+    if not feature.is_absolute():
+        feature = root / feature
+    directory = feature / "stories"
+    rows = []
+    for path in sorted(directory.glob("STORY-*.md")):
+        data, _ = load(path)
+        deps = ", ".join(data.get("depends_on", [])) or "—"
+        rows.append(f"| [{data.get('id')} ]({path.name}) | {data.get('title')} | {data.get('state')} | {deps} |")
+    content = [
+        f"# Stories — {feature.name}", "",
+        "| Story | Outcome | State | Depends on |",
+        "|---|---|---|---|", *rows, "",
+        "Generated by `product-os refresh-index`.", ""
+    ]
+    output = directory / "README.md"
+    output.write_text("\n".join(content))
+    return output
+
+def main():
+    parser = argparse.ArgumentParser(prog="product-os")
+    sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("doctor")
+    p = sub.add_parser("story-list"); p.add_argument("--state", choices=STATES)
+    sub.add_parser("story-next")
+    p = sub.add_parser("validate-story"); p.add_argument("story")
+    p = sub.add_parser("set-state"); p.add_argument("story"); p.add_argument("state", choices=STATES); p.add_argument("--force", action="store_true")
+    p = sub.add_parser("refresh-index"); p.add_argument("feature")
+    args = parser.parse_args()
+    root = find_root()
+
+    if args.command == "doctor":
+        missing = doctor(root)
+        if missing:
+            print("Setup incomplete:\n" + "\n".join(f"- {x}" for x in missing))
+            raise SystemExit(1)
+        print("Product OS setup looks complete.")
+    elif args.command == "story-list":
+        found = False
+        for path in stories(root):
+            data, _ = load(path)
+            if args.state and data.get("state") != args.state:
+                continue
+            found = True
+            print(f"{data.get('id')}\t{data.get('state')}\t{data.get('title')}\t{path.relative_to(root)}")
+        if not found:
+            print("No matching stories.")
+    elif args.command == "story-next":
+        result = next_story(root)
+        if not result:
+            print("No unblocked ready story.")
+            raise SystemExit(1)
+        _, path, data = result
+        print(f"{data.get('id')}\t{data.get('title')}\t{path.relative_to(root)}")
+    elif args.command == "validate-story":
+        path = resolve_story(root, args.story)
+        errors = validate_story(path)
+        if errors:
+            print("INVALID " + str(path))
+            print("\n".join(f"- {e}" for e in errors))
+            raise SystemExit(1)
+        print("VALID " + str(path))
+    elif args.command == "set-state":
+        path = resolve_story(root, args.story)
+        current, target = set_state(path, args.state, args.force)
+        print(f"{path.name}: {current} -> {target}")
+    elif args.command == "refresh-index":
+        print(refresh_index(root, args.feature))
+
+if __name__ == "__main__":
+    main()

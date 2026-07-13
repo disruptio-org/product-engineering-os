@@ -1,0 +1,74 @@
+# Project Agent Contract
+
+## Mission
+
+[What this product does, for whom, and the outcome it creates.]
+
+## Sources of truth
+
+- Product work: `docs/product/`
+- Personas and research: `docs/personas/`
+- Architecture decisions: `docs/adr/`
+- Workflow: `docs/agents/workflow.md`
+- Configuration: `.product-os/config.yml`
+
+Prefer repository evidence over assumptions. Mark unknown operational facts explicitly.
+
+## Repository commands
+
+- Install: `[command]`
+- Test: `[command]`
+- Lint: `[command]`
+- Type-check: `[command]`
+- Build: `[command]`
+- Run: `[command]`
+
+Do not claim verification unless the command ran successfully.
+
+## Architecture boundaries
+
+[Stable, non-obvious boundaries and prohibited dependencies.]
+
+## Engineering rules
+
+- Deliver one vertical user outcome at a time.
+- Reuse existing domain modules before creating parallel abstractions.
+- Agree the primary testing seam before implementation.
+- Add focused lower-level tests only for critical invariants.
+- Keep changes inside the active story.
+- Do not weaken permissions, validation, auditability, or error handling.
+- Do not modify generated files without following their generation process.
+
+## Product workflow
+
+1. Capture the idea.
+2. Resolve load-bearing questions.
+3. Write the BRD.
+4. Create vertical stories.
+5. Implement ready stories only.
+6. Use red-green-refactor.
+7. Review standards and requirements independently.
+8. Record acceptance evidence before marking done.
+
+## Story states
+
+`draft → needs-discovery → ready → in-progress → in-review → acceptance → done`
+
+Use `blocked` for an external dependency.
+
+## Definition of done
+
+- Acceptance criteria pass.
+- Required tests, lint, type-check, and build pass.
+- Security and permission behavior is preserved.
+- User-visible states are handled.
+- Acceptance evidence is written.
+- Story and index are updated.
+
+## Never
+
+- Never invent business rules, permissions, or operational facts.
+- Never split a user outcome into layer-only stories.
+- Never implement a draft, discovery, or blocked story.
+- Never mark work done based only on compilation.
+- Never let simulated personas replace real user validation.

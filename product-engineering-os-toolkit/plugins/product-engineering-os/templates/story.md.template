@@ -1,0 +1,51 @@
+---
+id: STORY-000
+title: <Outcome-oriented title>
+state: draft
+feature: <feature-slug>
+depends_on: []
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
+---
+
+# STORY-000 — <Outcome-oriented title>
+
+## User outcome
+
+As a <user>, I can <complete outcome>, so that <value>.
+
+## Business value
+## Scope
+## Non-goals
+
+## Experience
+
+### Happy path
+### Empty, loading, error, and permission states
+
+## Acceptance criteria
+
+- [ ] Given ..., when ..., then ...
+- [ ] Given ..., when ..., then ...
+
+## Business and permission rules
+
+## Primary testing seam
+
+Name the single highest-value interface through which most behavior will be proven.
+
+## Focused invariant tests
+
+## Observability
+## Dependencies
+## Implementation notes
+
+Hints only. Do not prescribe a layer-by-layer task list.
+
+## Definition of done
+
+- [ ] Acceptance criteria pass.
+- [ ] Required checks pass.
+- [ ] Standards and requirements review pass.
+- [ ] Acceptance evidence is recorded.
+- [ ] Story and index are updated.

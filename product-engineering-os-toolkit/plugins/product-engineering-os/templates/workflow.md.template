@@ -1,0 +1,18 @@
+# Product Engineering Workflow
+
+```text
+idea → grilled idea → BRD → vertical stories → implementation → review → acceptance
+```
+
+Feature files:
+
+```text
+docs/product/<feature>/
+  idea.md
+  grill-summary.md
+  brd.md
+  stories/
+  acceptance/
+```
+
+No story moves directly from `draft` to `in-progress`.

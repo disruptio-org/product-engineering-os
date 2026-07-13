@@ -1,0 +1,32 @@
+---
+story: STORY-000
+result: pending
+created: <YYYY-MM-DD>
+---
+
+# Acceptance Report — STORY-000
+
+## Outcome tested
+## Environment
+
+## Acceptance criteria evidence
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| AC1 | pending | |
+
+## Automated checks
+
+| Check | Command | Result |
+|---|---|---|
+| Tests | | |
+| Lint | | |
+| Type-check | | |
+| Build | | |
+
+## Manual or runtime verification
+## Security and permission verification
+## Remaining risks
+## Final result
+
+`accepted` or `rejected`

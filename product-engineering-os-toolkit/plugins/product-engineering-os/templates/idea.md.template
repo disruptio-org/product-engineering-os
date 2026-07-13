@@ -1,0 +1,29 @@
+---
+feature: <feature-slug>
+status: exploring
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
+---
+
+# Idea: <Feature Name>
+
+## One-sentence idea
+## Problem
+## Target users
+## Current workaround
+## Desired outcome
+## Evidence
+### Confirmed
+### Assumed
+## Product council perspectives
+### User
+### UX/UI
+### Business
+### Technical
+### QA and operations
+## Smallest valuable version
+## Explicit non-goals
+## Risks
+## Open questions
+## Decisions made
+## Next step

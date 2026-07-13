@@ -1,0 +1,22 @@
+version: 1
+tracker: markdown
+docs_root: docs/product
+personas_dir: docs/personas
+adr_dir: docs/adr
+agent_docs_dir: docs/agents
+story_states:
+  - draft
+  - needs-discovery
+  - ready
+  - in-progress
+  - in-review
+  - acceptance
+  - done
+  - blocked
+commands:
+  install: "[command]"
+  test: "[command]"
+  lint: "[command]"
+  typecheck: "[command]"
+  build: "[command]"
+  run: "[command]"

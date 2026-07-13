@@ -1,0 +1,31 @@
+---
+feature: <feature-slug>
+status: draft
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
+---
+
+# Business Requirements Document: <Feature Name>
+
+## Executive summary
+## Business problem
+## Objectives and success measures
+## Users and stakeholders
+## Current process
+## Proposed capability
+## Scope
+### In scope
+### Out of scope
+## User journeys
+## Business rules
+## Functional requirements
+## UX and service states
+## Data, permissions, security, and compliance
+## Reporting and observability
+## Dependencies
+## Risks and mitigations
+## Assumptions
+## Open decisions
+## Release strategy
+## Acceptance at product level
+## Source documents

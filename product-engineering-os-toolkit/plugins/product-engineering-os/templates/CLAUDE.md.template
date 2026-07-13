@@ -1,0 +1,16 @@
+@AGENTS.md
+
+## Claude Code
+
+Use Product Engineering OS skills:
+
+- `/product-engineering-os:setup-project`
+- `/product-engineering-os:idea`
+- `/product-engineering-os:grill-me`
+- `/product-engineering-os:write-brd`
+- `/product-engineering-os:create-stories`
+- `/product-engineering-os:manage-stories`
+- `/product-engineering-os:implement-story`
+- `/product-engineering-os:accept-story`
+
+Keep procedures in skills, not in this file.
