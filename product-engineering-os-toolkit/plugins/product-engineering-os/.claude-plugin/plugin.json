@@ -1,0 +1,17 @@
+{
+  "name": "product-engineering-os",
+  "displayName": "Product Engineering OS",
+  "description": "A disciplined Claude Code workflow from idea discovery to accepted vertical delivery.",
+  "author": {
+    "name": "disruptio-org"
+  },
+  "license": "MIT",
+  "keywords": [
+    "product",
+    "brd",
+    "user-stories",
+    "tdd",
+    "claude-code",
+    "vertical-slices"
+  ]
+}
